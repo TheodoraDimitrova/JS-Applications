@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Messenger</title>
+    <style>
+        label {
+            display: inline-block;
+            width: 5em;
+        }
+
+        #author, #content {
+            width: 30em;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+</head>
+<body>
+<div id="main">
+    <textarea id="messages" cols="80" rows="12" disabled="true"></textarea>
+    <div id="controls">
+        <label for="author">Name: </label><input id="author" type="text"><br>
+        <label for="content">Message: </label><input id="content" type="text">
+        <input id="submit" type="button" value="Send">
+        <input id="refresh" type="button" value="Refresh">
+    </div>
+</div>
+<!--<script src="solution.js"></script>-->
+<script>
+    (function attachEvents() {
+        $('#submit').click(attachSend);
+        $('#refresh').click(attachRefresh);
+        function attachSend() {
+            let messageJson = {
+                'author': $('#author').val(),
+                'content': $('#content').val(),
+                'timestamp': Date.now()
+            };
+            let sendMessageRequest = {
+                url: 'https://messanger-dc6bd.firebaseio.com/messenger/.json',
+                method: 'POST',
+                data: JSON.stringify(messageJson),
+                success: attachRefresh
+            };
+            $.ajax(sendMessageRequest);
+        }
+
+        function attachRefresh() {
+            $.ajax({
+                method: 'GET',
+                url: 'https://messanger-dc6bd.firebaseio.com/messenger/.json'
+            }).then(function (res) {
+                let output = $('#messages');
+                output.empty();
+                let messageStr = "";
+                for (let key in res) {//object in object
+                    messageStr += `${res[key].author}: ${res[key].content}\n`;
+                }
+                output.text(messageStr);
+                $('#author').val("");
+                $('#content').val("");
+            })
+
+        }
+    })();
+</script>
+</body>
+</html>

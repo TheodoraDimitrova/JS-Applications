@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+</head>
+<body>
+<div id="insertBook">
+    <p>Insert Book</p>
+    <label>Title:</label>
+    <input type="text" id="title">
+    <label>Author:</label>
+    <input type="text" id="author">
+    <label>Isbn:</label>
+    <input type="text" id="isbn">
+    <button id="add">ADD</button>
+    <button id="allBooks">SEE All Books</button>
+</div>
+
+<script>
+    const APP_KEY = 'kid_S1wIECccf';
+    const kinveyUsername = "guest";
+    const kinveyPassword = "guest";
+    const base64Auth = btoa(kinveyUsername + ":" + kinveyPassword);
+    const authHeaders = {"Authorization": "Basic " + base64Auth};
+    class Book {
+
+        constructor(title, author, isbn) {
+            this.title = title;
+            this.author = author;
+            this.isbn = isbn;
+        }
+    }
+    $('#add').on('click', addBook);
+    $('#allBooks').on('click', allBooks);
+
+
+    function addBook() {
+        let title = $('#title').val();
+        let author = $('#author').val();
+        let isbn = $('#isbn').val();
+
+        let book = new Book(title, author, isbn);
+        $.ajax({
+            method: "POST",
+            headers: authHeaders,
+            url: ` https://baas.kinvey.com/appdata/${APP_KEY}/books`,
+            data: book
+        }).then(function (res) {
+            $('<div class="allBooks">').append($('<table border="1"  id="bookList">')).appendTo($('body'));
+            renderRowBook(res);
+
+        }).catch(function (err) {
+            console.log(err);
+        });
+        $('#title').val("");
+        $('#author').val("");
+        $('#isbn').val("");
+    }
+    function allBooks() {
+
+        $.ajax({
+            method: "GET",
+            headers: authHeaders,
+            url: ` https://baas.kinvey.com/appdata/${APP_KEY}/books`
+
+        }).then(function (res) {
+           $('<div class="allBooks">').append($('<table border="1"  id="bookList">')).appendTo($('body'));
+            for (let obj of res) {
+                renderRowBook(obj);
+            }
+
+
+        }).catch(function (err) {
+            console.log(err);
+        });
+
+
+    }
+    function renderRowBook(obj) {
+        $('<tr>').append($(`<td>${obj.title}</td>`))
+            .append($(`<td>${obj._id}</td>`))
+            .append($(`<td>${obj.author}</td>`))
+            .append($(`<td>${obj.isbn}</td>`))
+            .append($(`<button id="delete">DELETE</button>`))
+            .append($(`<button id="update">EDIT</button>`))
+            .appendTo($('#bookList'));
+
+
+    }
+</script>
+
+</body>
+</html>

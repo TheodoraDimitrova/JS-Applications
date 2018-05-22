@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.10/handlebars.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <script src="./sandwiches.js"></script>
+    <title>Sandwiches</title>
+    <style>
+        .data {
+            border-style: solid;
+            width: 100%;
+            margin-right: 20px
+        }
+
+        img {
+            width: 300px;
+            height: 200px;
+        }
+
+        .content-placeholder {
+            width: 75%;
+            margin: 0 auto;
+            background: #d59450;
+        }
+
+        h1 {
+            text-align: center;
+
+        }
+
+        .btn {
+            position: relative;
+
+            left: 90%;
+            bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+
+
+<h1>Sandwiches</h1>
+<script id="sandwiches-template" type="text/x-handlebars-template">
+    {{#each sandwiches}}
+    <section class="data" data-index="{{id}}">
+        <img src="{{img}}">
+        <h1>Name: {{#lowercase}}{{name}}{{/lowercase}} </h1>
+        <p>Description :{{#uppercase}}{{description}}{{/uppercase}}</p>
+        {{#if origin}} <p>Country:{{#makeBold}}{{origin}}{{/makeBold}}</p>{{/if}}
+        {{formatName name}}
+        <p>Nutrition Facts : {{nutritionFacts}} </p>
+        <a href="#" class="btn">View Details</a>
+    </section>
+    {{/each}}
+
+</script>
+
+<div class="content-placeholder"></div>
+
+
+<script>
+    Handlebars.registerHelper("formatName", function (property) {
+        return new Handlebars.SafeString("<strong>This is my string</strong> " + property)
+    });
+    Handlebars.registerHelper("makeBold", function (options) {//Block helpers
+        return new Handlebars.SafeString("<strong>" + options.fn(this) + "</strong>");
+    });
+    Handlebars.registerHelper('uppercase', function (options) {//Block helpers
+        // "this" is the context that existed when calling the helper
+        return options.fn(this).toUpperCase();
+
+    });
+    Handlebars.registerHelper('lowercase', function (options) {//Block helpers
+        return options.fn(this).toLowerCase();
+
+    });
+    let theTemplateScript = $("#sandwiches-template").html();
+    let theTemplate = Handlebars.compile(theTemplateScript);
+    let context = {sandwiches};
+    let theCompiledHtml = theTemplate(context);
+    $('.content-placeholder').html(theCompiledHtml);
+
+    $('.btn').on("click", function (e) {
+        e.preventDefault();
+        let index = ($(this).parent().data('index'));
+        $('.more').remove();
+        for (let obj of sandwiches) {
+            if (obj.id === index) {
+                let text = obj.directions;
+                $(this).parent().append($(`<div class="more"> ${text}</div>`));
+                return;
+            }
+        }
+    })
+
+</script>
+
+
+</body>
+</html>

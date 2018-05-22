@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bus Stop</title>
+    <style>
+        #stopName {
+            font-size: 1.5em;
+            font-weight: 400;
+            padding: 0.25em;
+            background-color: aquamarine;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+</head>
+<body>
+<div id="stopInfo" style="width:20em">
+    <div>
+        <label for="stopId">Stop ID: </label>
+        <input id="stopId" type="text">
+        <input id="submit" type="button" value="Check" onclick="getInfo()"></div>
+    <div id="result">
+        <div id="stopName"></div>
+        <ul id="buses"></ul>
+    </div>
+</div>
+<script>
+    function getInfo() {
+
+        let stopId = $('#stopId').val();
+        $.ajax({
+            method: 'GET',
+            url: `https://judgetests.firebaseio.com/businfo/${stopId}.json`
+        }).then(function (res) {
+            $('#stopName').text(`${res.name}`);
+            for (let key in res.buses) {
+                let busId = key;
+                let time = res.buses[key];
+                let li = $(`<li>Bus ${busId} arrives in ${time} minutes</li>`);
+                $('#buses').append(li);
+            }
+
+        })
+            .catch(function (err) {
+                $('#stopName').text("Error");
+            });
+
+    }
+</script>
+</body>
+</html>

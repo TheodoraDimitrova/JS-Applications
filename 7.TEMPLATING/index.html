@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Contact Book</title>
+    <link rel="stylesheet" href="./style/contact.css">
+    <link rel="stylesheet" href="./style/site.css">
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.10/handlebars.min.js"></script>
+</head>
+<body>
+<div id="data"></div>
+<div class="container">
+    <header>&#9993; Contact Book</header>
+    <div id="book">
+        <div id="list">
+            <h1>Contacts</h1>
+            <div class="content"></div>
+        </div>
+        <div id="details">
+            <h1>Details</h1>
+            <div class="content"></div>
+        </div>
+    </div>
+    <footer>Contact Book SPA &copy; 2017</footer>
+</div>
+<script id="list-contacts" type="text/x-handlebars-template">
+    {{#each contacts}}
+    <div class="contact" data-id={{@index}}>
+        <span class="avatar small">&#9787;</span>
+        <span class="names">{{firstName}}{{lastName}}</span>
+    </div>
+    {{/each}}
+</script>
+
+<script id="list-details" type="text/x-handlebars-template">
+    <div class="info">
+        <div class="col">
+            <span class="avatar">&#9787;</span>
+        </div>
+        <div class="col">
+            <span class="name">{{firstName}}</span>
+            <span class="name">{{lastName}}</span>
+        </div>
+    </div>
+    <div class="info">
+        <span class="info-line">&phone; {{phone}}</span>
+        <span class="info-line">&#9993; {{email}}</span>
+    </div>
+</script>
+
+
+<script>
+    let theTemplateScript = $("#list-contacts").html();
+    let theTemplate = Handlebars.compile(theTemplateScript);
+    let context = $.ajax('data.json');
+
+    let obj={
+        contacts:context
+    } ;
+
+    let theCompiledHtml = theTemplate(obj);
+    $('#list ').find($('.content')).html(theCompiledHtml);
+
+
+
+    $('.contact').on("click",function (e) {
+        e.preventDefault();
+        let index = $(this).data('id');
+        console.log(index);
+        $('#details').find($('.content')).empty();
+        let theTemplateScript2 = $("#list-details").html();
+        let theTemplate2 = Handlebars.compile(theTemplateScript2);
+        let theCompiledHtml2 = theTemplate2(obj.contacts[index]);
+         $('#details').find($('.content')).append(theCompiledHtml2);
+    })
+
+
+
+</script>
+
+
+</body>
+</html>

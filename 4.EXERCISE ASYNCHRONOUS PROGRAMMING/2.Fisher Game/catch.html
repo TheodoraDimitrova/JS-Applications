@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Biggest Catch</title>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <!--<script src="catch.js"></script>-->
+    <style>
+        h1 {
+            text-align: center;
+        }
+
+        input {
+            display: block;
+        }
+
+        div {
+            border: 1px solid black;
+            padding: 5px;
+            display: inline-table;
+            width: 24%;
+        }
+
+        div#aside {
+            margin-top: 8px;
+            width: 15%;
+            border: 2px solid grey;
+        }
+
+        div#catches {
+            width: auto;
+        }
+
+        button {
+            display: inline-table;
+            margin: 5% 0 5% 5%;
+            width: 39%;
+        }
+
+        button.add {
+            width: 90%;
+        }
+
+        button.load {
+            width: 90%;
+            padding: 10px;
+        }
+
+        button.load {
+            vertical-align: top;
+        }
+
+        fieldset {
+            display: inline-table;
+            vertical-align: top;
+        }
+
+        fieldset#main {
+            width: 70%;
+        }
+    </style>
+</head>
+<body>
+<h1>Biggest Catches</h1>
+<fieldset id="main">
+    <legend>Catches</legend>
+    <div id="catches">
+        <div class="catch" data-id="<id-goes-here>">
+            <label>Angler</label>
+            <input type="text" class="angler" value="Paulo Amorim"/>
+            <label>Weight</label>
+            <input type="number" class="weight" value="636"/>
+            <label>Species</label>
+            <input type="text" class="species" value="Atlantic Blue Marlin"/>
+            <label>Location</label>
+            <input type="text" class="location" value="Vitória, Brazil"/>
+            <label>Bait</label>
+            <input type="text" class="bait" value="trolled pink"/>
+            <label>Capture Time</label>
+            <input type="number" class="captureTime" value="80"/>
+            <button class="update">Update</button>
+            <button class="delete">Delete</button>
+        </div>
+    </div>
+</fieldset>
+<div id="aside">
+    <button class="load">Load</button>
+    <fieldset id="addForm">
+        <legend>Add Catch</legend>
+        <label>Angler</label>
+        <input type="text" class="angler"/>
+        <label>Weight</label>
+        <input type="number" class="weight"/>
+        <label>Species</label>
+        <input type="text" class="species"/>
+        <label>Location</label>
+        <input type="text" class="location"/>
+        <label>Bait</label>
+        <input type="text" class="bait"/>
+        <label>Capture Time</label>
+        <input type="number" class="captureTime"/>
+        <button class="add">Add</button>
+    </fieldset>
+</div>
+<!--<script>attachEvents()</script>-->
+<script>
+    (function attachEvents() {
+
+        const APP_KEY = 'kid_BkpAWSqcM';
+        const kinveyUsername = "guest";
+        const kinveyPassword = "guest";
+        const base64Auth = btoa(kinveyUsername + ":" + kinveyPassword);
+        const authHeaders = {"Authorization":"Basic " + base64Auth};
+
+        $('.load').on("click", loadPlayers);
+        $('.add').on("click", addCatch);
+
+
+
+        function loadPlayers() {
+            $.ajax({
+                method: "GET",
+                headers: authHeaders,
+                url: `https://baas.kinvey.com/appdata/${APP_KEY}/biggestCatches`,
+            }).then(function (res) {
+                for (let obj of res) {
+                    renderDiv(obj);
+                }
+            }).catch(function (err) {
+                console.log(err);
+            })
+
+        }
+
+        function addCatch() {
+            let angler = $('#addForm  .angler').val();
+            let weight = Number($('#addForm .weight').val());
+            let species = $('#addForm .species').val();
+            let location = $('#addForm .location').val();
+            let bait = $('#addForm .bait').val();
+            let captureTime = Number($('#addForm .captureTime').val());
+
+            let newCatchInfo = {
+                "angler": angler,
+                "weight": weight,
+                "species": species,
+                "location": location,
+                "bait": bait,
+                "captureTime": captureTime
+            };
+            $.ajax({
+                method: "POST",
+                headers: {"Authorization": "Basic " + base64Auth, "Content-type": "application/json"},
+                url: `https://baas.kinvey.com/appdata/${APP_KEY}/biggestCatches`,
+                data: JSON.stringify(newCatchInfo)
+            }).then(function (obj) {
+                renderDiv(obj);
+
+            }).catch(function (err) {
+                console.log(err);
+            })
+        }
+
+        function updatePlayer() {
+            let data_id = $(this).parent().attr('data-id');
+            let div = $(this).parent();
+            let angler = $(div.find('.angler')).val();
+            let weight = $(div.find('.weight')).val();
+            let species = $(div.find('.species')).val();
+            let location = $(div.find('.location')).val();
+            let bait = $(div.find('.bait')).val();
+            let captureTime = $(div.find('.captureTime')).val();
+
+            let updateCatchInfo = {
+                "_id": data_id,
+                "angler": angler,
+                "weight": weight,
+                "species": species,
+                "location": location,
+                "bait": bait,
+                "captureTime": captureTime
+            };
+
+            $.ajax({
+                method: "PUT",
+                headers: {"Authorization": "Basic " + base64Auth, "Content-type": "application/json"},
+                url: ` https://baas.kinvey.com/appdata/${APP_KEY}/biggestCatches/${data_id}`,
+                data: JSON.stringify(updateCatchInfo)
+            }).then(function (res) {
+                    console.log(res);
+                }).catch(function (err) {
+                console.log(err);
+            })
+        }
+
+        function deletePlayer() {
+            let data_id = $(this).parent().attr('data-id');
+            let div = $(this).parent();
+            $.ajax({
+                method: "DELETE",
+                headers: {"Authorization": "Basic " + base64Auth, "Content-type": "application/json"},
+                url: ` https://baas.kinvey.com/appdata/${APP_KEY}/biggestCatches/${data_id}`,
+            }).then(function (res) {
+                div.remove();
+            }).catch(function (err) {
+                console.log(err);
+            })
+        }
+
+        function renderDiv(obj) {
+            $('#catches').append($(`<div class="catch" data-id="${obj._id}">
+            <label>Angler</label>
+            <input type="text" class="angler" value="${obj.angler}"/>
+            <label>Weight</label>
+            <input type="number" class="weight" value="${obj.weight}"/>
+            <label>Species</label>
+            <input type="text" class="species" value="${obj.species}"/>
+            <label>Location</label>
+            <input type="text" class="location" value="${obj.location}"/>
+            <label>Bait</label>
+            <input type="text" class="bait" value="${obj.bait}"/>
+            <label>Capture Time</label>
+            <input type="number" class="captureTime" value="${obj.captureTime}"/>
+            <button class="update">Update</button>
+            <button class="delete">Delete</button>
+        </div>`));
+            $('.update').on("click", updatePlayer);
+            $('.delete').on("click", deletePlayer);
+
+
+        }
+    })();
+</script>
+</body>
+</html>

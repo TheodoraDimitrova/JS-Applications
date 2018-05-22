@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Phonebook</title>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+</head>
+<body>
+<h1>Phonebook</h1>
+<ul id="phonebook"></ul>
+<button id="btnLoad">Load</button>
+<h2>Create Contact</h2>
+Person: <input type="text" id="person"/>
+<br>
+Phone: <input type="text" id="phone"/>
+<br>
+<button id="btnCreate">Create</button>
+<!--<script src="phonebook.js"></script>-->
+<script>
+    const URL = 'https://phonebook-e6f56.firebaseio.com/phonebook';
+    $('#btnLoad').on('click', loadData);
+    function loadData() {
+        $('#phonebook').empty();
+        $.ajax({
+            method: 'GET',
+            url: URL + ".json"
+        }).then(function (res) {//success
+            for (let keys in res) {
+                let li = $(`<li>${res[keys].name }: ${res[keys].phone} </li> `)
+                    .append($('<a href="#">[Delete]</a>')
+                        .click(function () {
+                            $.ajax({
+                                method: 'DELETE',
+                                url: URL + `/${keys}.json`
+                            }).then(() => $(li).remove())
+                                .catch(function (err) {//error
+                                    console.log(err);
+                                })
+                        }));
+                $('#phonebook').append(li);
+            }
+
+        }).catch(function (err) {//error
+            console.log(err);
+        })
+    }
+
+    $('#btnCreate').on('click', PostData);
+    function PostData() {
+        let name = $('#person').val();
+        let phone = $('#phone').val();
+        let postData = JSON.stringify({name, phone});
+        $.ajax({
+            method: "POST",
+            url: URL + `.json`,
+            data: postData
+        }).then(function (res) {//appendElement
+            let li = $(`<li>${name}: ${phone} </li> `)
+                .append($('<a href="#">[Delete]</a>')
+                    .click(function () {
+                        $.ajax({
+                            method: 'DELETE',
+                            url: URL + `/${res.name}.json`
+                        }).then(() => $(li).remove())
+                            .catch(function (err) {//error
+                                console.log(err);
+                            });
+
+                    }));
+
+            $('#person').val("");
+            $('#phone').val("");
+        }).catch(function (err) {//error
+            console.log(err);
+        })
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Forecatser</title>
+    <style>
+        #content {
+            width: 400px;
+        }
+
+        #request {
+            text-align: center;
+        }
+
+        .bl {
+            width: 300px;
+        }
+
+        #current {
+            text-align: center;
+            font-size: 2em;
+        }
+
+        #upcoming {
+            text-align: center;
+        }
+
+        .condition {
+            text-align: left;
+            display: inline-block;
+        }
+
+        .symbol {
+            font-size: 4em;
+            display: inline-block;
+        }
+
+        .forecast-data {
+            display: block;
+        }
+
+        .upcoming {
+            display: inline-block;
+            margin: 1.5em;
+        }
+
+        .label {
+            margin-top: 1em;
+            font-size: 1.5em;
+            background-color: aquamarine;
+            font-weight: 400;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+</head>
+<body>
+<div id="content">
+    <div id="request">
+        <input id="location" class='bl' type="text">
+        <input id="submit" class="bl" type="button" value="Get Weather">
+    </div>
+    <div id="forecast" style="display:none">
+        <div id="current">
+            <div class="label">Current conditions</div>
+        </div>
+        <div id="upcoming">
+            <div class="label">Three-day forecast</div>
+        </div>
+    </div>
+</div>
+<!--<script src="forecaster.js"></script>-->
+<script>
+    (function attachEvents() {
+        $('#submit').on("click", weatherReport);
+
+
+        function weatherReport() {
+            $.ajax({
+                method: "GET",
+                url: "https://judgetests.firebaseio.com/locations.json"
+            }).then(function (result) {//masiv ot obekti
+                let location = $('#location').val();
+                for (let obj of result) {
+                    if (obj.name === location) {
+                        let currentConditions = $.ajax({
+                            method: "GET",
+                            url: `https://judgetests.firebaseio.com/forecast/today/${obj.code}.json `
+                        });
+                        let threeDayForecast = $.ajax({
+                            method: "GET",
+                            url: `https://judgetests.firebaseio.com/forecast/upcoming/${obj.code}.json `
+                        });
+                        Promise.all([currentConditions, threeDayForecast])
+                            .then(display)
+                            .catch(errorHand);
+                    }
+
+                }
+                $('#location').val("");
+            }).catch(errorHand);
+        }
+
+        function display(res) {
+            let con = res[0].forecast.condition;
+            let symbols = {
+                "Sunny": "&#x2600", // ☀
+                "Partly sunny": "&#x26C5", // ⛅
+                "Overcast": "&#x2601", // ☁
+                "Rain": "&#x2614", // ☂
+                "Degrees": "&#176"
+            };
+            $('#forecast').css("display", "");
+            $('#current').append($(`<span class="condition symbol">${symbols[con]}</span>`))
+                .append($(`<span class="condition">`)
+                    .append($(`<span class="forecast-data">${res[0].name}</span>`))
+                    .append($(`<span class="forecast-data">${res[0].forecast.low}°/${res[0].forecast.high}°</span>`))
+                    .append($(`<span class="forecast-data">${con}</span>`)));
+
+           let firstDayCondition=res[1].forecast[0].condition;
+           let secDayCondition=res[1].forecast[1].condition;
+           let thiDayCondition=res[1].forecast[2].condition;
+
+            $('#upcoming')
+                .append($(`<span class="upcoming">`)
+                    .append($(`<span class="symbol">${symbols[firstDayCondition]}</span>`))
+                    .append($(`<span class="forecast-data">${res[1].forecast[0].low}°/${res[1].forecast[0].high}°</span>`))
+                    .append($(`<span class="forecast-data">${firstDayCondition}</span>`)))
+                .append($(`<span class="upcoming">`)
+                    .append($(`<span class="symbol">${symbols[secDayCondition]}</span>`))
+                    .append($(`<span class="forecast-data">${res[1].forecast[1].low}°/${res[1].forecast[1].high}°</span>`))
+                    .append($(`<span class="forecast-data">${secDayCondition}</span>`)))
+                .append($(`<span class="upcoming">`)
+                    .append($(`<span class="symbol">${symbols[thiDayCondition]}</span>`))
+                    .append($(`<span class="forecast-data">${res[1].forecast[2].low}°/${res[1].forecast[2].high}°</span>`))
+                    .append($(`<span class="forecast-data">${thiDayCondition}</span>`)));
+
+
+        }
+
+        function errorHand(err) {
+            console.log(err);
+            $('#forecast').text("Error");
+        }
+
+    })();
+</script>
+</body>
+</html>

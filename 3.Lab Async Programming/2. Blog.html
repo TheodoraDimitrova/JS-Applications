@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Blog</title>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+</head>
+<body>
+<h1>All Posts</h1>
+<button id="btnLoadPosts">Load Posts</button>
+<select id="posts"></select>
+<button id="btnViewPost">View</button>
+<h1 id="post-title">Post Details</h1>
+<ul id="post-body"></ul>
+<h2>Comments</h2>
+<ul id="post-comments"></ul>
+<!--<script src="solution.js"></script>-->
+<script>
+    (function attachEvents() {
+        const kinveyAppId = "kid_BJYPN7ucM";
+        const serviceUrl = "https://baas.kinvey.com/appdata/" + kinveyAppId;
+        const kinveyUsername = "guest";
+        const kinveyPassword = "guest";
+        const base64auth = btoa(kinveyUsername + ":" + kinveyPassword);
+        const authHeaders = {"Authorization": "Basic " + base64auth};
+
+        $('#btnLoadPosts').on("click", loadPosts);
+        $('#btnViewPost').on('click', viewPosts);
+        function loadPosts() {
+            $("#posts").empty();
+            $.ajax({
+                method: "GET",
+                url: 'https://baas.kinvey.com/appdata/kid_BJYPN7ucM/posts',
+                headers: authHeaders
+            }).then(function (res) {
+                for (let obj of res) {
+                    $('#posts').append(`<option value=${obj._id}>${obj.title}</option>`)
+                }
+            }).catch(displayError);
+
+        }
+
+        function viewPosts() {
+            let id = $('#posts').find(":selected").val();
+            let requestPosts = $.ajax({
+                method: "GET",
+                url: 'https://baas.kinvey.com/appdata/kid_BJYPN7ucM/posts/' + id,
+                headers: authHeaders
+            });
+            let requestComments = $.ajax({
+                method: "GET",
+                url: `${serviceUrl}/comments?query={"post_id":"${id}"}`,
+                headers: authHeaders
+            });
+            Promise.all([requestPosts, requestComments]).then(function (res) {
+                $('#post-title').append($(`<h1 id="post-title">${res[0].title}</h1>`));
+                $('#post-body').append($(`<ul id="post-body">${res[0].body}</ul>`));
+
+                for (let obj of res[1]) {
+                     $('#post-comments').append($(`<ul>${obj.text}</ul>`));
+                    console.log(obj.text);
+                }
+
+
+            }).catch(displayError)
+        }
+
+        function displayError(err) {
+            let errorDiv = $("<div>").text("Error: " +
+                err.status + ' (' + err.statusText + ')');
+            $(document.body).prepend(errorDiv);
+            setTimeout(function () {
+                $(errorDiv).fadeOut(function () {
+                    $(errorDiv).remove();
+                });
+            }, 3000);
+        }
+
+
+    })();
+</script>
+</body>
+</html>
